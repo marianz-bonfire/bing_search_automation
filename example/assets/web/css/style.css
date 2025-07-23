@@ -1,0 +1,109 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+html,
+body {
+    height: 100%;
+    font-family: Roboto !important;
+}
+
+body {
+    display: flex;
+    align-items: center;
+    padding-bottom: 40px;
+    /*
+    background: linear-gradient(118deg, #DCE9F7 8.13%, #EBEEF6 62.84%, #F2F3F9 86.2%, #FBF7F9 106.52%);
+    */
+    background: url(../img/bg.png), linear-gradient(0deg, #e8eff8 0%, #c0e2f8 100%);
+
+    /*color: #fff !important;*/
+    color: #2d2d2d !important;
+}
+
+#wrapper {
+    max-width: 650px;
+    padding: .5em 1.5em;
+}  
+
+#wrapper p {
+    font-weight: bold !important;
+}
+
+#wrapper h1,
+#wrapper h2 {
+    font-weight: bolder;
+}
+
+#wrapper main {
+    padding: 1.5em 0;
+}
+
+#btn-start hr,
+#btn-stop hr {
+    margin: 0.5em;
+}
+
+#btn-stop {
+    display: none;
+}
+
+#div-settings,
+#div-timer {
+    font-size: 0.7em;
+}
+
+#modal-help {
+    color: #000;
+}
+
+.modal-body {
+    background: linear-gradient(118deg, #DCE9F7 8.13%, #EBEEF6 62.84%, #F2F3F9 86.2%, #FBF7F9 106.52%);
+}
+
+#modal-help ol li {
+    padding: 0.3em 0;
+}
+
+#modal-help .form-check-label {
+    cursor: pointer;
+}
+
+#div-bing {
+    display: none !important;
+    width: 0px !important;
+    height: 0px !important;
+}
+
+#wrapper h1,
+#wrapper h2, 
+footer p.pt-3,
+footer label,
+footer small {
+    opacity: 0.8;
+}
+
+footer a {
+    /*color: #fdbf07;*/
+    color: #1662ca;
+    font-weight: bolder;
+    text-decoration: none;
+}
+
+footer a:hover {
+    /*color: #fdbf07;*/
+    color: #1662ca;
+    text-decoration: underline;
+}
+
+footer a.btn:hover {
+    text-decoration: none;
+}
+
+.btn-warning {
+    border-color: rgba(0,0,0,.2) !important;
+    background: radial-gradient(657px 657px at 2% 90%, #92b6fc 0, #dcf1f600 40%), radial-gradient(642px 642px at 82% 115%, #b4cdff 0, #dcf1f600 25%), linear-gradient(-73.25deg, #dcf2f7 7.43%, #9accd5 94.82%) !important;
+}
+
+.btn-warning:hover {
+    border-color: #1662ca !important;
+    background: radial-gradient(657px 657px at 2% 90%, #92b6fc 0, #dcf1f600 40%), radial-gradient(642px 642px at 82% 115%, #b4cdff 0, #dcf1f600 25%), linear-gradient(-73.25deg, #dcf2f7 7.43%, #9accd5 94.82%) !important;
+}

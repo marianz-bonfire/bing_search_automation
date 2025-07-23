@@ -1,89 +1,33 @@
-import 'dart:math';
+import 'dart:io';
 
+import 'package:bing_search_automation_example/local_webserver.dart';
+import 'package:bing_search_automation_example/screens/auto_search_android.dart';
+import 'package:bing_search_automation_example/screens/auto_search_windows.dart';
 import 'package:flutter/material.dart';
-import 'dart:async';
 
-import 'package:flutter/services.dart';
-import 'package:bing_search_automation/bing_search_automation.dart';
-
-import 'constants.dart';
-
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  String serverUrl = '';
+  if (Platform.isWindows) {
+    serverUrl = await LocalWebServer.init();
+  }
+  runApp(BingAutoSearchApp(url: serverUrl));
 }
 
-class MyApp extends StatefulWidget {
-  const MyApp({super.key});
-
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
-  final _bingSearchAutomationPlugin = BingSearchAutomation();
-
-  @override
-  void initState() {
-    super.initState();
-    initPlatformState();
-    initAccessibilityService();
-    setQueries();
-  }
-
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
-    try {
-      platformVersion = await _bingSearchAutomationPlugin.getPlatformVersion() ?? 'Unknown platform version';
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _platformVersion = platformVersion;
-    });
-  }
-
-  Future<void> initAccessibilityService() async {
-    final enabled = await _bingSearchAutomationPlugin.isServiceEnabled();
-    if (!enabled) {
-      await _bingSearchAutomationPlugin.openAccessibilitySettings();
-    }
-  }
-
-  Future<void> setQueries() async {
-    keywords.shuffle(Random());
-    await _bingSearchAutomationPlugin.setSearchQueue(keywords);
-  }
+class BingAutoSearchApp extends StatelessWidget {
+  final String url;
+  const BingAutoSearchApp({super.key, required this.url});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Plugin example app')),
-        body: Center(
-          child: Column(
-            children: [
-              Text('Running on: $_platformVersion\n'),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  await _bingSearchAutomationPlugin.launchBing();
-                },
-                child: Text('Launch Bing'),
-              ),
-            ],
-          ),
-        ),
+      title: 'Bing Auto Search',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        fontFamily: 'Roboto',
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
       ),
+      home: Platform.isAndroid ? AutoSearchAndroidPage() : AutoSearchWindowsPage(url: url),
     );
   }
 }

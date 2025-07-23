@@ -1,3 +1,4 @@
+import 'package:bing_search_automation/query_type.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'bing_search_automation_method_channel.dart';
@@ -23,6 +24,12 @@ abstract class BingSearchAutomationPlatform extends PlatformInterface {
     _instance = instance;
   }
 
+  void listen({
+    required void Function(int current, int total) onProgress,
+  }) {
+    throw UnimplementedError('listen() has not been implemented.');
+  }
+
   Future<String?> getPlatformVersion() {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
@@ -37,6 +44,15 @@ abstract class BingSearchAutomationPlatform extends PlatformInterface {
 
   Future<void> setSearchQueue(List<String> queries) async {
     throw UnimplementedError('setSearchQueue() has not been implemented.');
+  }
+
+  Future<void> setQueryType(QueryType type) async {
+    // SEARCH, READ, ANSWER
+    throw UnimplementedError('setQueryType() has not been implemented.');
+  }
+
+  Future<void> enableLog(bool enable) async {
+    throw UnimplementedError('enableLog() has not been implemented.');
   }
 
   Future<bool> isServiceEnabled() async {

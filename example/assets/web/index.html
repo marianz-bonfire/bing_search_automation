@@ -1,0 +1,154 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="content-language" content="en-us" />
+    <meta meta="title" content="Bing Auto Search for Microsoft Rewards" />
+    <meta name="description" content="Browser-based Bing auto search bot to earn Microsoft Rewards points." />
+    <meta name="robots" content="all" />
+    <meta name="author" content="Tarsier Marianz" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="https://github.com/marianz-bonfire/bing_search_automation" />
+    <meta property="og:title" content="Bing Auto Search for Microsoft Rewards" />
+    <meta property="og:site_name" content="Bing Auto Search for Microsoft Rewards" />
+    <meta property="og:description" content="Browser-based Bing auto search bot to earn Microsoft Rewards points." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link type="text/css" rel="stylesheet" href="css/style.css" />
+    <link type="text/css" rel="stylesheet" href="https://use.fontawesome.com/releases/v6.1.1/css/all.css" />
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
+    <title>Bing Auto Search for Microsoft Rewards</title>
+
+    <style>
+        #iframe-container {
+        width: 100%;
+        height: 400px;
+        }
+        iframe {
+        width: 100%;
+        height: 100%;
+        border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <section id="wrapper" class="m-auto text-center">
+        <header>
+            <img src="img/rewards.png" alt="Microsoft Rewards" />
+            <h2>Bing Auto Search for Microsoft Rewards</h2>
+        </header>
+        <main>
+            <div>
+                <button type="button" id="btn-start" class="btn btn-warning btn-lg">
+                    <i class="fas fa-play-circle"></i>
+                    <strong>Click to Start Auto Search</strong>
+                    <hr />
+                    <div id="div-settings">Loading Auto Search Settings...</div>
+                </button>
+                <button type="button" id="btn-stop" class="btn btn-danger btn-lg">
+                    <i class="fas fa-stop-circle"></i>
+                    <strong>Click to Stop Auto Search <span id="span-progress">(0/35)</span></strong>
+                    <hr />
+                    <div id="div-timer">Loading Auto Search Timer...</div>
+                </button>
+            </div>
+            <div id="div-bing"></div>
+            <!--
+            <div id="iframe-container">
+                <iframe id="iframe-total-points" src="http://www.bing.com/rewardsapp/bepflyoutpage?style=chromeextension"></iframe>
+            </div>
+            -->
+        </main>
+        <footer>
+            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#modal-help">Need help? (Tutorial and Settings)</a>
+            <p class="pt-3">This page is not affiliated with Microsoft, Rewards, Bing or Edge.</p>
+            <small>Microsoft, Rewards, Bing and Edge are registered trademarks of Microsoft Corporation in the United States of America and elsewhere.</small>
+            <hr />
+            <label>Made by</label>&nbsp;<a href="https://github.com/marianz-bonfire/bing_search_automation" target="_blank">Tarsier Marianz</a>
+            <br />
+            <small>This is a non-profit project and is licensed under open source terms on <a href="https://github.com/marianz-bonfire/bing_search_automation" target="_blank">GitHub</a>.</small>
+        </footer>
+    </section>
+    <div class="modal fade" id="modal-help" tabindex="-1" aria-labelledby="modal-help" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Need help? (Tutorial and Settings)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div class="alert alert-danger small">
+                                <p>
+                                    <strong class="text-danger">"Points need a break:"</strong> Under the new Microsoft Rewards rules, for some restricted accounts, points will only be awarded for 3 searches every 15 minutes (If this is your case, use the 5 minute interval.).
+                                </p>
+                                <p class="mb-0">
+                                    Using automation tools is against the <a href="https://www.microsoft.com/en-US/servicesagreement/#14l_MicrosoftRewards" target="_blank" class="alert-link">Microsoft Rewards terms of use</a>. <strong class="text-danger">Your account may be restricted, suspended and/or banned, use this tool at your own risk.</strong>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-lg-12">
+                            <h6>
+                                <strong class="text-muted">Tutorial</strong>
+                            </h6>
+                            <ol class="px-3 small">
+                                <li><a href="https://www.bing.com/" target="_blank"><strong>Sign in to Bing</strong></a> with your Microsoft Rewards account and return to this page.</li>
+                                <li>Start a new auto search by clicking the "Start Auto Search" button, the progress counter will be showned.</li>
+                                <li>To perform mobile searches, use your smartphone or emulate a mobile browser through the developer tools (F12) on the PC.</li>
+                            </ol>
+                        </div>
+                        <div class="col-lg-12">
+                            <h6>
+                                <strong class="text-muted">Settings</strong>
+                            </h6>
+                            <div class="form-group pb-3">
+                                <strong>Limit</strong>
+                                <select class="form-select" id="slc-limit">
+                                    <option value="5">05 searches</option>
+                                    <option value="10">10 searches</option>
+                                    <option value="20">20 searches</option>
+                                    <option value="25">25 searches</option>
+                                    <option value="30">30 searches</option>
+                                    <option value="35" selected="selected">35 searches (default)</option>
+                                    <option value="40">40 searches</option>
+                                    <option value="45">45 searches</option>
+                                    <option value="50">50 searches</option>
+                                </select>
+                            </div>
+                            <div class="form-group pb-3">
+                                <strong>Interval</strong>
+                                <select class="form-select" id="slc-interval">
+                                    <option value="5000">05 seconds</option>
+                                    <option value="10000" selected="selected">10 seconds (default)</option>
+                                    <option value="15000">15 seconds</option>
+                                    <option value="30000">30 seconds</option>
+                                    <option value="60000">60 seconds</option>
+                                    <option value="9999">10~60 seconds (random)</option>
+                                    <option value="120000">02 minutes</option>
+                                    <option value="180000">03 minutes</option>
+                                    <option value="240000">04 minutes</option>
+                                    <option value="300000">05 minutes (recomended for restricted accounts)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <strong>Multi-tab Mode</strong>
+                                <p class="small mb-0">
+                                    <small>When enabled, it's necessary to allow opening of multiple tabs/pop-ups in your browser.</small>
+                                </p>
+                                <select class="form-select" id="slc-multitab">
+                                    <option value="true">Enabled</option>
+                                    <option value="false" selected="selected">Disabled (default)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript" src="js/script.js" defer></script>
+</body>
+</html>

@@ -12,6 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
+  webview_windows: ^0.4.0
 
 dev_dependencies:
   flutter_test:
@@ -38,6 +39,10 @@ flutter:
       android:
         package: com.marianz.bing_search_automation
         pluginClass: BingSearchAutomationPlugin
+     # windows:
+     #   pluginClass: BingSearchAutomationPlugin
+     #linux:
+     #   pluginClass: BingSearchAutomationPlugin
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:

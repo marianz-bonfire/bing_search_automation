@@ -1,3 +1,4 @@
+import 'package:bing_search_automation/QueryType.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bing_search_automation/bing_search_automation.dart';
 import 'package:bing_search_automation/bing_search_automation_platform_interface.dart';
@@ -45,6 +46,23 @@ class MockBingSearchAutomationPlatform
   Future<void> launchBing() {
     // TODO: implement launchBing
     throw UnimplementedError();
+  }
+
+  @override
+  Future<void> enableLog(bool enable) {
+    // TODO: implement enableLog
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> setQueryType(QueryType type) {
+    // TODO: implement setQueryType
+    throw UnimplementedError();
+  }
+
+  @override
+  void listen({required void Function(int current, int total) onProgress}) {
+    // TODO: implement listen
   }
 }
 
