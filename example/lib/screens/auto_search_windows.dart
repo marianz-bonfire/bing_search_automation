@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:bing_search_automation_example/core/auto_start_manager.dart';
+import 'package:bing_search_automation_example/core/preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/services.dart';
@@ -20,6 +22,8 @@ class _AutoSearchWindowsPageState extends State<AutoSearchWindowsPage> {
   Uint8List? logoImage;
   Uint8List? backgroundImage;
 
+  bool isAutoStartEnabled = false;
+  bool isAutoSearchEnabled = false;
   @override
   void initState() {
     super.initState();
@@ -45,8 +49,10 @@ class _AutoSearchWindowsPageState extends State<AutoSearchWindowsPage> {
     }
   }
 
-
   Future<void> _checkServerStatus() async {
+    isAutoSearchEnabled = Preferences.instance.isAutoSearchEnabled;
+    isAutoStartEnabled = Preferences.instance.isAutoStartEnabled;
+
     if (LocalWebServer.isRunning) {
       setState(() {
         serverRunning = true;
@@ -54,6 +60,9 @@ class _AutoSearchWindowsPageState extends State<AutoSearchWindowsPage> {
         statusMessage = 'Server running on port ${LocalWebServer.port}';
         statusColor = Colors.green;
       });
+    }
+    if (isAutoSearchEnabled) {
+      _startAndOpen();
     }
   }
 
@@ -120,6 +129,26 @@ class _AutoSearchWindowsPageState extends State<AutoSearchWindowsPage> {
     });
   }
 
+  Future<void> _startAndOpen() async {
+    await _launchServer();
+
+    const timeout = Duration(seconds: 10);
+    const checkInterval = Duration(milliseconds: 300);
+
+    final startTime = DateTime.now();
+
+    while (!serverRunning) {
+      await Future.delayed(checkInterval);
+
+      if (DateTime.now().difference(startTime) > timeout) {
+        print("Server failed to start within timeout.");
+        return;
+      }
+    }
+
+    _openInBrowser(queryParams: '?auto=true&limit=50&interval=5000&multitab=true');
+  }
+
   Future<void> _copyToClipboard() async {
     if (serverUrl.isNotEmpty) {
       await Clipboard.setData(ClipboardData(text: serverUrl));
@@ -135,10 +164,10 @@ class _AutoSearchWindowsPageState extends State<AutoSearchWindowsPage> {
     }
   }
 
-  Future<void> _openInBrowser() async {
+  Future<void> _openInBrowser({String queryParams = ''}) async {
     if (serverUrl.isNotEmpty) {
       try {
-        await launchUrl(Uri.parse(serverUrl), mode: LaunchMode.externalApplication);
+        await launchUrl(Uri.parse('$serverUrl$queryParams'), mode: LaunchMode.externalApplication);
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(
@@ -165,15 +194,7 @@ class _AutoSearchWindowsPageState extends State<AutoSearchWindowsPage> {
         children: [
           // Background Image
           if (backgroundImage != null)
-            Positioned.fill(
-              child: Opacity(
-                opacity: 0.05,
-                child: Image.memory(
-                  backgroundImage!,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
+            Positioned.fill(child: Opacity(opacity: 0.05, child: Image.memory(backgroundImage!, fit: BoxFit.cover))),
 
           Padding(
             padding: const EdgeInsets.all(20.0),
@@ -202,13 +223,9 @@ class _AutoSearchWindowsPageState extends State<AutoSearchWindowsPage> {
 
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(12),
-                            child: Image.memory(
-                              logoImage!,
-                              fit: BoxFit.contain,
-                            ),
+                            child: Image.memory(logoImage!, fit: BoxFit.contain),
                           ),
                         ),
-
                     ],
                   ),
                 ),
@@ -307,7 +324,7 @@ class _AutoSearchWindowsPageState extends State<AutoSearchWindowsPage> {
                       child: ElevatedButton(
                         onPressed: isLoading ? null : (serverRunning ? _stopServer : _launchServer),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: serverRunning ? Colors.red.shade50 : null,
+                          backgroundColor: serverRunning ? Colors.red.shade50 : Color(0x995CE5B3),
                           foregroundColor: serverRunning ? Colors.red : null,
                           padding: EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -361,21 +378,59 @@ class _AutoSearchWindowsPageState extends State<AutoSearchWindowsPage> {
                     physics: BouncingScrollPhysics(),
                     children: [
                       _buildInfoCard(
-                        icon: Icons.shield,
-                        title: 'Local & Secure',
-                        description: 'Your content is served locally without external network requests.',
+                        icon: Icons.power_settings_new,
+                        title: 'Auto Start',
+                        description:
+                            'Automatically launch the application when Windows starts. Perfect for background monitoring and tray-based services.',
+                        child: Switch(
+                          value: isAutoStartEnabled,
+                          onChanged: (value) async {
+                            await Preferences.instance.setAutoStart(value);
+                            if (value) {
+                              await AutoStartManager.enableAutoStart();
+                            } else {
+                              await AutoStartManager.disableAutoStart();
+                            }
+
+                            setState(() {
+                              isAutoStartEnabled = value;
+                            });
+                          },
+                        ),
                       ),
                       SizedBox(height: 12),
                       _buildInfoCard(
-                        icon: Icons.bolt,
-                        title: 'Fast Loading',
-                        description: 'Static files are served directly from memory for optimal performance.',
+                        icon: Icons.search,
+                        title: 'Auto Search',
+                        description:
+                        'Automatically scan and detect available devices or network resources in the background without manual refresh.',
+                        child: Switch(
+                          value: isAutoSearchEnabled,
+                          onChanged: (value) async {
+                            await Preferences.instance.setAutoSearch(value);
+
+                            setState(() {
+                              isAutoSearchEnabled = value;
+                            });
+                          },
+                        ),
                       ),
                       SizedBox(height: 12),
                       _buildInfoCard(
-                        icon: Icons.code,
-                        title: 'Developer Tools',
-                        description: 'Access browser developer tools for debugging and inspection.',
+                        icon: Icons.public_sharp,
+                        title: 'Web Assets',
+                        description:
+                        LocalWebServer.assetPath,
+                        child: Switch(
+                          value: isAutoSearchEnabled,
+                          onChanged: (value) async {
+                            await Preferences.instance.setAutoSearch(value);
+
+                            setState(() {
+                              isAutoSearchEnabled = value;
+                            });
+                          },
+                        ),
                       ),
                     ],
                   ),
@@ -388,7 +443,7 @@ class _AutoSearchWindowsPageState extends State<AutoSearchWindowsPage> {
     );
   }
 
-  Widget _buildInfoCard({required IconData icon, required String title, required String description}) {
+  Widget _buildInfoCard({required IconData icon, required String title, required String description, Widget? child}) {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -409,7 +464,17 @@ class _AutoSearchWindowsPageState extends State<AutoSearchWindowsPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                  if (child != null) ...[
+                    Row(
+                      children: [
+                        Text(title, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                        Spacer(),
+                        child,
+                      ],
+                    ),
+                  ] else ...[
+                    Text(title, style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+                  ],
                   SizedBox(height: 4),
                   Text(description, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
                 ],

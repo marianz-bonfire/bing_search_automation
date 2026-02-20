@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:bing_search_automation_example/core/preferences.dart';
 import 'package:bing_search_automation_example/screens/auto_search_android.dart';
 import 'package:bing_search_automation_example/screens/auto_search_windows.dart';
 import 'package:bing_search_automation_example/screens/splash_screen.dart';
@@ -8,7 +9,9 @@ import 'package:flutter/material.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Preferences.instance.init();
   await DesktopManager.init();
+
   runApp(BingAutoSearchApp());
 }
 

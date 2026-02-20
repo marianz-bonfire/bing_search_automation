@@ -320,10 +320,29 @@ window.addEventListener("load", () => {
 
     window.dataLayer = window.dataLayer || [];
 
-    function gtag() {
-        dataLayer.push(arguments);
+    const params = new URLSearchParams(window.location.search);
+    const autoStart = params.get("auto");
+    const limit = params.get("limit");
+    const interval = params.get("interval");
+    const multitab = params.get("multitab");
+
+    // index.html?auto=true&limit=50&interval=5000&multitab=true
+    if (limit) {
+        BING_AUTOSEARCH.elements.select.limit.value = limit;
+    }
+    if (interval) {
+        BING_AUTOSEARCH.elements.select.interval.value = interval;
+    }
+    if (multitab) {
+        BING_AUTOSEARCH.elements.select.multitab.value = multitab;
     }
 
-   // gtag('js', new Date());
-    //gtag('config', 'G-YXNCPPFVCW');
+    if (autoStart === "true") {
+        // Small delay to ensure everything initialized
+        setTimeout(() => {
+            BING_AUTOSEARCH.elements.button.start.style.display = "none";
+            BING_AUTOSEARCH.elements.button.stop.style.display = "inline-block";
+            BING_AUTOSEARCH.search.start();
+        }, 1000);
+    }
 });
