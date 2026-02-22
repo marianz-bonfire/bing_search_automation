@@ -61,7 +61,7 @@ class MockBingSearchAutomationPlatform
   }
 
   @override
-  void listen({required void Function(int current, int total) onProgress, required void Function(bool state) onCompleted}) {
+  void listen({required void Function(int current, int total, String keyword) onProgress, required void Function(bool state) onCompleted}) {
     // TODO: implement listen
     
   }

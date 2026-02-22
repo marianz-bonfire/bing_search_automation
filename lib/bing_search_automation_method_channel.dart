@@ -15,15 +15,16 @@ class MethodChannelBingSearchAutomation extends BingSearchAutomationPlatform {
 
   @override
   void listen({
-    required void Function(int current, int total) onProgress,
+    required void Function(int current, int total, String keyword) onProgress,
     required void Function(bool state) onCompleted,
   }) {
     eventChannel.receiveBroadcastStream().listen((event) {
       if (event is Map) {
         final current = event['current'];
         final total = event['total'];
+        final keyword = event['keyword'] as String?;
         if (current != null && total != null) {
-          onProgress(current, total);
+          onProgress(current, total, keyword ?? '');
         }
 
         final completed = event['completed'];

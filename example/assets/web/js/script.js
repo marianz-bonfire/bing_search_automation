@@ -52,6 +52,12 @@
             let _multitab_mode = BING_AUTOSEARCH.cookies.get("_multitab_mode");
             let _search_interval = BING_AUTOSEARCH.cookies.get("_search_interval");
             let _search_limit = BING_AUTOSEARCH.cookies.get("_search_limit");
+            let _is_stopped = BING_AUTOSEARCH.cookies.get("_stopped");
+
+            if (!_is_stopped.value) {
+                BING_AUTOSEARCH.cookies.set("_stopped", "false", 365);
+            }
+
 
             if (!_need_help.value) {
                 modal_help.show();
@@ -253,6 +259,8 @@
         start: () => {
             let searches = BING_AUTOSEARCH.search.generate();
 
+            BING_AUTOSEARCH.cookies.set("_stopped", 'false', 365);
+
             searches.forEach((search) => {
                 setTimeout(() => {
                     BING_AUTOSEARCH.search.engine.progress.update(search);
@@ -277,9 +285,14 @@
             });
         },
         stop: () => {
-            window.open("https://rewards.bing.com/pointsbreakdown");
 
-            location.reload();
+            BING_AUTOSEARCH.cookies.set("_stopped", 'true', 365);
+
+            setTimeout(() => {
+                window.open("https://rewards.bing.com/pointsbreakdown");
+                location.reload();
+            }, 1000);
+
         }
     },
     load: () => {
@@ -312,37 +325,51 @@
         });
 
         BING_AUTOSEARCH.elements.div.settings.innerHTML = `<strong>Auto Search Settings:</strong> ${BING_AUTOSEARCH.search.engine.settings.toString()}.`;
+    },
+    validate: () => {
+        const params = new URLSearchParams(window.location.search);
+        const autoStart = params.get("auto");
+        const limit = params.get("limit");
+        const interval = params.get("interval");
+        const multitab = params.get("multitab");
+
+        const stop = params.get("stop");
+
+        // index.html?auto=true&limit=50&interval=5000&multitab=true
+        if (limit) {
+            BING_AUTOSEARCH.elements.select.limit.value = limit;
+        }
+        if (interval) {
+            BING_AUTOSEARCH.elements.select.interval.value = interval;
+        }
+        if (multitab) {
+            BING_AUTOSEARCH.elements.select.multitab.value = multitab;
+        }
+
+        if (stop === "true") {
+            BING_AUTOSEARCH.cookies.set("_stopped", 'true', 365);
+            BING_AUTOSEARCH.search.stop();
+            location.reload();
+        } else {
+            let isStopped = BING_AUTOSEARCH.cookies.get("_stopped");
+
+            if (autoStart === "true" && isStopped.value !== "true") {
+                // Small delay to ensure everything initialized
+                setTimeout(() => {
+                    BING_AUTOSEARCH.elements.button.start.style.display = "none";
+                    BING_AUTOSEARCH.elements.button.stop.style.display = "inline-block";
+                    BING_AUTOSEARCH.search.start();
+                }, 1000);
+            }
+        }
     }
 };
 
 window.addEventListener("load", () => {
     BING_AUTOSEARCH.load();
+    BING_AUTOSEARCH.validate();
 
     window.dataLayer = window.dataLayer || [];
 
-    const params = new URLSearchParams(window.location.search);
-    const autoStart = params.get("auto");
-    const limit = params.get("limit");
-    const interval = params.get("interval");
-    const multitab = params.get("multitab");
 
-    // index.html?auto=true&limit=50&interval=5000&multitab=true
-    if (limit) {
-        BING_AUTOSEARCH.elements.select.limit.value = limit;
-    }
-    if (interval) {
-        BING_AUTOSEARCH.elements.select.interval.value = interval;
-    }
-    if (multitab) {
-        BING_AUTOSEARCH.elements.select.multitab.value = multitab;
-    }
-
-    if (autoStart === "true") {
-        // Small delay to ensure everything initialized
-        setTimeout(() => {
-            BING_AUTOSEARCH.elements.button.start.style.display = "none";
-            BING_AUTOSEARCH.elements.button.stop.style.display = "inline-block";
-            BING_AUTOSEARCH.search.start();
-        }, 1000);
-    }
 });

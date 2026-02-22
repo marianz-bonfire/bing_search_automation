@@ -25,7 +25,7 @@ abstract class BingSearchAutomationPlatform extends PlatformInterface {
   }
 
   void listen({
-    required void Function(int current, int total) onProgress,
+    required void Function(int current, int total, String keyword) onProgress,
     required void Function(bool state) onCompleted,
   }) {
     throw UnimplementedError('listen() has not been implemented.');

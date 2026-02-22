@@ -9,8 +9,8 @@ class DesktopManager {
       await WindowManager.instance.ensureInitialized();
       windowManager.waitUntilReadyToShow().then((_) async {
         await windowManager.setTitle('Bing Search Local Server');
-        await windowManager.setSize(const Size(400, 800));
-        await windowManager.setMinimumSize(const Size(400, 800));
+        await windowManager.setSize(const Size(400, 600));
+        await windowManager.setMinimumSize(const Size(400, 600));
 
         await windowManager.center();
         await windowManager.show();
