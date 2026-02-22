@@ -175,7 +175,6 @@ class LocalWebServer {
       // Get temp directory
       final tempDir = await getTemporaryDirectory();
 
-      // Create a unique directory for this app instance - DO NOT DELETE ON STOP
       final appName = 'bing_search_automation_example';
       final outputDir = Directory('${tempDir.path}/$appName/web_assets');
 
@@ -218,8 +217,6 @@ class LocalWebServer {
       final webAssets = manifestMap.keys.where((key) => key.startsWith('assets/web/')).toList();
 
       if (webAssets.isEmpty) {
-        debugPrint('WARNING: No assets found in assets/web/');
-        debugPrint('Available assets:');
         manifestMap.keys.take(20).forEach((key) => debugPrint('  $key'));
         throw Exception('No web assets found in assets/web/');
       }
@@ -318,8 +315,7 @@ class LocalWebServer {
       _server = null;
       _isRunning = false;
     }
-    // REMOVED: We no longer delete the temp directory on stop
-    // This ensures assets persist between app restarts
+
     debugPrint('Server stopped, assets preserved at: $_currentAssetPath');
   }
 

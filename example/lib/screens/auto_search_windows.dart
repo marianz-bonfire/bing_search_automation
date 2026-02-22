@@ -230,7 +230,6 @@ class _AutoSearchWindowsPageState extends State<AutoSearchWindowsPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // AppBar replacement with logo
           Container(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(

@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Bing Search"
-#define MyAppVersion "1.0.17+18"
+#define MyAppVersion "1.0.17+19"
 #define MyAppPublisher "Bonfire" 
 #define MyAppExeName "bing_search_automation_example.exe"
 #define MyAppServiceName "Rewards.exe"
