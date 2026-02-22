@@ -1,4 +1,4 @@
-import 'package:bing_search_automation/QueryType.dart';
+import 'package:bing_search_automation/query_type.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bing_search_automation/bing_search_automation.dart';
 import 'package:bing_search_automation/bing_search_automation_platform_interface.dart';
@@ -61,8 +61,9 @@ class MockBingSearchAutomationPlatform
   }
 
   @override
-  void listen({required void Function(int current, int total) onProgress}) {
+  void listen({required void Function(int current, int total, String keyword) onProgress, required void Function(bool state) onCompleted}) {
     // TODO: implement listen
+    
   }
 }
 

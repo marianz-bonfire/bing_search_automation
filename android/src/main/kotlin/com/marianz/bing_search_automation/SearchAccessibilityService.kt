@@ -6,11 +6,13 @@ import android.content.Context
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 
 @TargetApi(Build.VERSION_CODES.DONUT)
 class SearchAccessibilityService : AccessibilityService() {
     private lateinit var searchExecutor: SearchExecutor
+    private lateinit var readExecutor: ReadExecutor
 
     companion object {
         val searchQueue: MutableList<String> = mutableListOf()
@@ -57,8 +59,10 @@ class SearchAccessibilityService : AccessibilityService() {
 
         instance = this
         searchExecutor = SearchExecutor(this)
+        readExecutor = ReadExecutor(this)
     }
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         event ?: return
         val packageName = event.packageName?.toString() ?: return
@@ -74,6 +78,64 @@ class SearchAccessibilityService : AccessibilityService() {
 
         if (packageName.contains("bing", ignoreCase = true)) {
             handleBingEvent(event)
+
+
+            //Logger.logNodeTree(rootInActiveWindow)
+
+            val eventType = event.eventType
+            when (eventType) {
+                AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED -> {
+                    val text = event.text?.firstOrNull()?.toString()
+                    if (!text.isNullOrBlank()) {
+                        Log.d("SearchAccessibility", "Text changed: $text")
+                    }
+                }
+
+                AccessibilityEvent.TYPE_VIEW_CLICKED -> {
+                    val node = event.source
+                    val className = node?.className?.toString()
+                    if (className?.contains("Button", ignoreCase = true) == true) {
+                        Log.d("SearchAccessibility", "Button clicked: $className")
+                        // Optional: Mark query as submitted
+                        // currentQuery = null
+                    }
+                }
+
+                AccessibilityEvent.TYPE_VIEW_FOCUSED -> {
+                    Log.d("SearchAccessibility", "View focused")
+                }
+
+                AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED -> {
+                    Log.d("SearchAccessibility", "Accessibility focus")
+                }
+
+                AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
+                    Log.d("SearchAccessibility", "Window state changed: ${event.className}")
+                }
+
+                AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
+                    Log.d("SearchAccessibility", "Window content changed")
+                }
+
+                AccessibilityEvent.TYPE_ANNOUNCEMENT -> {
+                    Log.d("SearchAccessibility", "Announcement event")
+                }
+
+                AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED -> {
+                    Log.d("SearchAccessibility", "Notification state changed")
+                }
+
+                AccessibilityEvent.TYPE_TOUCH_EXPLORATION_GESTURE_START,
+                AccessibilityEvent.TYPE_TOUCH_EXPLORATION_GESTURE_END -> {
+                    Log.d("SearchAccessibility", "Touch exploration gesture")
+                }
+
+                else -> {
+                    Log.d("SearchAccessibility", "Unhandled event type: $eventType")
+                }
+
+
+            }
         }
     }
 
@@ -103,6 +165,8 @@ class SearchAccessibilityService : AccessibilityService() {
                             isSearching = false
                             performGlobalAction(GLOBAL_ACTION_BACK)
                         }
+                    } else {
+                        BingSearchAutomationPlugin.sendCompleted()
                     }
                 },
                 onFailure = {
@@ -111,6 +175,12 @@ class SearchAccessibilityService : AccessibilityService() {
             )
         } else if (queryType == QueryType.READ) {
             Logger.d("READ query type");
+
+            readExecutor.performRead("Rewards") {
+                isSearching = false
+                performGlobalAction(GLOBAL_ACTION_BACK)
+            }
+            Logger.logNodeTree(rootInActiveWindow);
         } else if (queryType == QueryType.ANSWER) {
             Logger.d("ANSWER query type");
         }

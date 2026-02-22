@@ -1,1 +1,1 @@
-enum QueryType { SEARCH, READ, ANSWER }
+enum QueryType { SEARCH, READ, ANSWER, OTHERS}

@@ -89,4 +89,42 @@ object NodeFinder {
     fun String?.containsText(text: String): Boolean {
         return this?.contains(text, true) == true
     }
+
+
+    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+    fun findRewardsProgress(root: AccessibilityNodeInfo?): String? {
+        if (root == null) return null
+
+        for (i in 0 until root.childCount) {
+            val child = root.getChild(i) ?: continue
+
+            if (child.className == "android.widget.TextView" && child.text == "Rewards") {
+                val parent = child.parent
+                if (parent != null) {
+                    for (j in 0 until parent.childCount) {
+                        val sibling = parent.getChild(j) ?: continue
+                        if (sibling != child &&
+                            sibling.className == "android.widget.TextView" &&
+                            sibling.text != null &&
+                            sibling.text.toString().matches(Regex("""\d+/\d+"""))
+                        ) {
+                            // Try clicking the parent or the Rewards node itself
+                            if (child.isClickable) {
+                                child.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                            } else if (parent is AccessibilityNodeInfo && parent.isClickable) {
+                                parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                            }
+                            return sibling.text.toString()
+                        }
+                    }
+                }
+            }
+
+            val result = findRewardsProgress(child)
+            if (result != null) return result
+        }
+
+        return null
+    }
+
 }

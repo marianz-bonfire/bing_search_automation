@@ -37,8 +37,9 @@ class BingSearchAutomation {
   }
 
   void listen({
-    required void Function(int current, int total) onProgress,
+    required void Function(int current, int total, String keyword) onProgress,
+    required void Function(bool state) onCompleted,
   }) {
-    BingSearchAutomationPlatform.instance.listen(onProgress: onProgress);
+    BingSearchAutomationPlatform.instance.listen(onProgress: onProgress, onCompleted: onCompleted);
   }
 }
