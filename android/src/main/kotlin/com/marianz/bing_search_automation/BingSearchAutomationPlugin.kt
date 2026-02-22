@@ -23,9 +23,9 @@ class BingSearchAutomationPlugin: FlutterPlugin, MethodCallHandler {
     companion object {
         var eventSink: EventChannel.EventSink? = null
 
-        fun sendProgress(current: Int, total: Int) {
+        fun sendProgress(current: Int, total: Int,  keyword: String?) {
             Handler(Looper.getMainLooper()).post {
-                eventSink?.success(mapOf("current" to current, "total" to total))
+                eventSink?.success(mapOf("current" to current, "total" to total, "keyword" to (keyword ?: "")))
             }
         }
 
@@ -67,6 +67,7 @@ class BingSearchAutomationPlugin: FlutterPlugin, MethodCallHandler {
             "checkServiceEnabled" -> result.success(isServiceEnabled(context))
             "getCurrentQuery" -> result.success(SearchAccessibilityService.getCurrentQuery())
             "launchBing" -> handleLaunchBing(result)
+            "stopSearch" -> handleStopSearch(result)
             "setQueryType" -> handleSetQueryType(call, result)
             "enableLog" -> handleEnableLog(call, result)
             else -> result.notImplemented()
@@ -131,6 +132,25 @@ class BingSearchAutomationPlugin: FlutterPlugin, MethodCallHandler {
     private fun handleLaunchBing(result: MethodResult) {
         launchBingApp()
         result.success(null)
+    }
+
+    private fun handleStopSearch(result: MethodResult) {
+        // Option 1: Directly access companion object properties
+        /*
+        SearchAccessibilityService.searchQueue.clear()
+        SearchAccessibilityService.setLaunchedFromApp(false)
+        SearchAccessibilityService.getInstance()?.apply {
+            isSearching = false
+        }*/
+
+        result.success(true)
+    }
+
+    private fun handleSetSearchInterval(call: MethodCall, result: MethodResult) {
+        val min = call.argument<Int>("minSeconds") ?: 10
+        val max = call.argument<Int>("maxSeconds") ?: 60
+        SearchAccessibilityService.setSearchInterval(min, max)
+        result.success(true)
     }
 
     @TargetApi(Build.VERSION_CODES.DONUT)

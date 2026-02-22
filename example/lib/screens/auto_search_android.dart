@@ -185,7 +185,6 @@ class _AutoSearchAndroidPageState extends State<AutoSearchAndroidPage> {
                       TextSpan(
                         text: "GitHub.",
                         style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline),
-                        // Add actual GitHub link logic here
                       ),
                     ],
                   ),
