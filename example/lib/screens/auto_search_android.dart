@@ -58,12 +58,12 @@ class _AutoSearchAndroidPageState extends State<AutoSearchAndroidPage> {
           _currentKeyword = keyword;
         });
 
-        //await showProgressNotification(current, total);
+        await showProgressNotification(current, total);
       },
       onCompleted: (state) async {
         setState(() => _started = false);
 
-        //await showCompletedNotification();
+        await showCompletedNotification();
       },
     );
 
@@ -129,8 +129,13 @@ class _AutoSearchAndroidPageState extends State<AutoSearchAndroidPage> {
                     children: [
                       ElevatedButton.icon(
                         onPressed: () async {
-                          setState(() => _started = true);
-                          await _bingSearchAutomationPlugin.launchBing();
+                          if (_started) {
+                            setState(() => _started = false);
+                            await _bingSearchAutomationPlugin.stop();
+                          } else {
+                            setState(() => _started = true);
+                            await _bingSearchAutomationPlugin.launchBing();
+                          }
                         },
                         icon: Icon(_started ? Icons.stop : Icons.play_arrow),
                         label: Text(title),

@@ -36,6 +36,10 @@ class BingSearchAutomation {
     return BingSearchAutomationPlatform.instance.launchBing();
   }
 
+  Future<void> stop() {
+    return BingSearchAutomationPlatform.instance.stop();
+  }
+
   void listen({
     required void Function(int current, int total, String keyword) onProgress,
     required void Function(bool state) onCompleted,

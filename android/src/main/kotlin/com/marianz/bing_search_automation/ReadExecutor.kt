@@ -20,110 +20,119 @@ class ReadExecutor(private val service: AccessibilityService) {
     private val ARTICLES_TO_READ = 3
     private var isReading = false
     private var currentOnComplete: (() -> Unit)? = null
+    private val TAG = "ReadExecutor"
 
-    companion object {
-        val ARTICLE_SEARCH_TERMS = listOf(
-            "news",
-            "latest headlines",
-            "breaking news",
-            "technology news",
-            "sports news"
-        )
-    }
+    // Article indicators to look for
+    private val ARTICLE_INDICATORS = listOf(
+        "news", "article", "story", "update", "headline",
+        "breaking", "latest", "trending", "top stories"
+    )
 
-    fun performRead(searchTerm: String, onComplete: () -> Unit) {
+    fun performRead(onComplete: () -> Unit) {
         if (isReading) {
-            Logger.d("Already reading, skipping")
+            Log.d(TAG, "Already reading, skipping")
             onComplete()
             return
         }
 
-        Logger.d("Starting read session with term: $searchTerm")
+        Log.d(TAG, "Starting read session on home page")
         isReading = true
         currentOnComplete = onComplete
         articlesRead = 0
 
-        // Step 1: Try to find and read articles
+        // Start reading articles directly
         attemptToReadArticles()
     }
 
     private fun attemptToReadArticles() {
-        Logger.d("Attempting to read articles...")
+        Log.d(TAG, "Attempting to read articles, current count: $articlesRead/$ARTICLES_TO_READ")
 
         val root = service.rootInActiveWindow ?: run {
-            Logger.d("No root node, waiting...")
+            Log.d(TAG, "No root node, waiting...")
             handler.postDelayed({
                 attemptToReadArticles()
             }, 2000)
             return
         }
 
-        // First, try to find clickable news items
-        val newsItems = findClickableNewsItems(root)
+        root.refresh()
+        Log.d(TAG, "Root refreshed")
 
-        if (newsItems.isNotEmpty()) {
-            Logger.d("Found ${newsItems.size} news items, clicking first one")
-            clickAndReadNewsItem(newsItems.first())
+        // Find articles on the current page
+        val articles = findArticles(root)
+        Log.d(TAG, "Found ${articles.size} potential articles")
+
+        if (articles.isNotEmpty()) {
+            // Filter out articles we might have already read
+            val unreadArticles = articles
+            Log.d(TAG, "Found ${unreadArticles.size} unread articles")
+
+            if (unreadArticles.isNotEmpty()) {
+                val nextArticle = unreadArticles.first()
+                Log.d(TAG, "Selected article: '${nextArticle.text?.take(50)}...'")
+                clickAndReadArticle(nextArticle)
+            } else {
+                Log.d(TAG, "No unread articles found")
+                completeReadingSession()
+            }
         } else {
-            // If no news items found, try to search
-            searchForNews()
+            Log.d(TAG, "No articles found on page")
+            completeReadingSession()
         }
     }
 
-    private fun findClickableNewsItems(root: AccessibilityNodeInfo): List<AccessibilityNodeInfo> {
-        val newsItems = mutableListOf<AccessibilityNodeInfo>()
+    private fun findArticles(root: AccessibilityNodeInfo): List<AccessibilityNodeInfo> {
+        val articles = mutableListOf<AccessibilityNodeInfo>()
+        val processedTexts = mutableSetOf<String>()
 
-        // Look for items that might be news articles
         fun traverse(node: AccessibilityNodeInfo?, depth: Int = 0) {
-            if (node == null || depth > 15) return
+            if (node == null || depth > 20) return
 
-            val text = node.text?.toString()?.lowercase() ?: ""
+            val text = node.text?.toString()?.trim() ?: ""
+            val contentDesc = node.contentDescription?.toString()?.trim() ?: ""
 
-            // Check if this looks like a news item
-            val isPotentialNews = (
+            // Check if this looks like an article
+            val isArticle = (
                     node.isClickable &&
                             text.isNotBlank() &&
-                            text.length > 15 && // Reasonable length for a headline
+                            text.length in 20..200 && // Article headlines typically this length
                             !text.contains("search", ignoreCase = true) &&
                             !text.contains("bing", ignoreCase = true) &&
-                            (text.contains("news") ||
-                                    text.contains("article") ||
-                                    text.contains("story") ||
-                                    text.contains("update") ||
-                                    text.contains("headline"))
+                            !text.contains("setting", ignoreCase = true) &&
+                            !text.contains("menu", ignoreCase = true) &&
+                            (ARTICLE_INDICATORS.any { text.contains(it, ignoreCase = true) } ||
+                                    ARTICLE_INDICATORS.any { contentDesc.contains(it, ignoreCase = true) } ||
+                                    text.contains("?", ignoreCase = true) || // Headlines often have questions
+                                    text.matches(Regex(".*[.!?]$"))) // Ends with punctuation
                     )
 
-            if (isPotentialNews) {
-                newsItems.add(node)
+            if (isArticle && !processedTexts.contains(text)) {
+                Log.d(TAG, "Found potential article: '$text'")
+                processedTexts.add(text)
+                articles.add(node)
             }
 
-            // Also look for items in common news containers
-            if (node.className?.contains("RecyclerView") == true ||
-                node.className?.contains("ListView") == true ||
-                node.className?.contains("ScrollView") == true) {
-
-                // This might be a feed, check its children
-                for (i in 0 until node.childCount) {
-                    traverse(node.getChild(i), depth + 1)
-                }
-            } else {
-                // Continue normal traversal
-                for (i in 0 until node.childCount) {
-                    traverse(node.getChild(i), depth + 1)
-                }
+            // Continue traversal
+            for (i in 0 until node.childCount) {
+                traverse(node.getChild(i), depth + 1)
             }
         }
 
         traverse(root)
-        return newsItems.distinctBy { it.text?.toString() }.take(5) // Limit to 5 items
+
+        // Return unique articles, limit to 10 max
+        return articles.distinctBy { it.text?.toString() }.take(10)
     }
 
-    private fun clickAndReadNewsItem(item: AccessibilityNodeInfo) {
-        Logger.d("Clicking news item: ${item.text?.take(50)}...")
+    private fun clickAndReadArticle(article: AccessibilityNodeInfo) {
+        Log.d(TAG, "Clicking article ${articlesRead + 1}/$ARTICLES_TO_READ: '${article.text?.take(50)}...'")
 
-        // Click the item
-        val clicked = item.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-        Logger.d("News item clicked: $clicked")
+        // Find clickable parent if needed
+        val clickableTarget = if (article.isClickable) article
+        else NodeFinder.findClickableParent(article) ?: article
+
+        val clickSuccess = clickableTarget.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+        Log.d(TAG, "Article clicked: $clickSuccess")
 
         // Wait for article to load
         handler.postDelayed({
@@ -132,175 +141,125 @@ class ReadExecutor(private val service: AccessibilityService) {
     }
 
     private fun readCurrentArticle() {
-        Logger.d("Reading article ${articlesRead + 1}/$ARTICLES_TO_READ")
+        Log.d(TAG, "Reading article ${articlesRead + 1}/$ARTICLES_TO_READ")
 
-        // Simulate reading by waiting
+        // Simulate reading by scrolling through the article
+        simulateReading()
+
         handler.postDelayed({
-            // Try to scroll or interact with the article
-            simulateArticleInteraction()
+            articlesRead++
+            Log.d(TAG, "Finished reading article $articlesRead/$ARTICLES_TO_READ")
 
-            handler.postDelayed({
-                articlesRead++
-                Logger.d("Finished reading article $articlesRead/$ARTICLES_TO_READ")
-
-                if (articlesRead >= ARTICLES_TO_READ) {
-                    completeReadingSession()
-                } else {
-                    // Go back and find next article
-                    goBackAndFindNextArticle()
-                }
-            }, 7000) // Wait 7 seconds for "reading"
-        }, 2000) // Wait 2 seconds for article to load
+            if (articlesRead >= ARTICLES_TO_READ) {
+                Log.d(TAG, "Completed all $ARTICLES_TO_READ articles")
+                completeReadingSession()
+            } else {
+                Log.d(TAG, "Moving to next article")
+                goBackAndFindNextArticle()
+            }
+        }, 8000) // Wait 8 seconds for "reading"
     }
 
-    private fun simulateArticleInteraction() {
+    private fun simulateReading() {
         val root = service.rootInActiveWindow ?: return
 
-        // Try to find and click "Read more" or "Continue reading"
-        val readMoreButtons = listOf(
-            NodeFinder.findByText(root, "Read more"),
-            NodeFinder.findByText(root, "Continue reading"),
-            NodeFinder.findByText(root, "See more")
-        )
+        // Try to scroll through the article
+        val scrollableViews = findScrollableViews(root)
 
-        val readMoreButton = readMoreButtons.firstOrNull { it != null && it.isClickable }
-        readMoreButton?.let {
-            Logger.d("Found 'Read more' button, clicking")
-            it.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+        if (scrollableViews.isNotEmpty()) {
+            Log.d(TAG, "Found ${scrollableViews.size} scrollable views, simulating reading")
+
+            // Perform multiple scrolls to simulate reading
+            handler.postDelayed({
+                scrollableViews.firstOrNull()?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                Log.d(TAG, "First scroll")
+
+                handler.postDelayed({
+                    scrollableViews.firstOrNull()?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                    Log.d(TAG, "Second scroll")
+
+                    handler.postDelayed({
+                        scrollableViews.firstOrNull()?.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+                        Log.d(TAG, "Third scroll")
+                    }, 2000)
+                }, 2000)
+            }, 2000)
+        } else {
+            Log.d(TAG, "No scrollable views found")
         }
 
-        // Try to scroll
-        val scrollableView = findScrollableView(root)
-        scrollableView?.let {
-            if (it.isScrollable) {
-                Logger.d("Found scrollable view, scrolling")
-                it.performAction(AccessibilityNodeInfo.ACTION_SCROLL_FORWARD)
+        // Look for "Read more" or similar buttons
+        val readMoreTexts = listOf("Read more", "Continue reading", "See more", "Full story", "Read full article")
+        for (text in readMoreTexts) {
+            val button = NodeFinder.findByText(root, text)
+            if (button != null && button.isClickable) {
+                Log.d(TAG, "Found '$text' button, clicking")
+                button.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                break
             }
         }
     }
 
-    private fun findScrollableView(node: AccessibilityNodeInfo?): AccessibilityNodeInfo? {
-        if (node == null) return null
+    private fun findScrollableViews(node: AccessibilityNodeInfo?): List<AccessibilityNodeInfo> {
+        val scrollables = mutableListOf<AccessibilityNodeInfo>()
 
-        if (node.isScrollable) return node
+        fun traverse(currentNode: AccessibilityNodeInfo?) {
+            if (currentNode == null) return
 
-        if (node.className?.contains("ScrollView") == true ||
-            node.className?.contains("RecyclerView") == true ||
-            node.className?.contains("ListView") == true) {
-            return node
+            if (currentNode.isScrollable ||
+                currentNode.className?.contains("ScrollView") == true ||
+                currentNode.className?.contains("RecyclerView") == true ||
+                currentNode.className?.contains("ListView") == true ||
+                currentNode.className?.contains("WebView") == true) {
+                scrollables.add(currentNode)
+            }
+
+            for (i in 0 until currentNode.childCount) {
+                traverse(currentNode.getChild(i))
+            }
         }
 
-        for (i in 0 until node.childCount) {
-            val result = findScrollableView(node.getChild(i))
-            if (result != null) return result
-        }
-
-        return null
+        traverse(node)
+        return scrollables
     }
 
     private fun goBackAndFindNextArticle() {
-        Logger.d("Going back to find next article...")
+        Log.d(TAG, "Going back to home page to find next article...")
 
-        // Go back
+        // Perform back action
         service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
+        Log.d(TAG, "Back action performed")
 
-        // Wait for back to complete
+        // Wait for back to complete and page to load
         handler.postDelayed({
-            attemptToReadArticles()
+            // Sometimes need to go back twice to reach home
+            handler.postDelayed({
+                Log.d(TAG, "Looking for next article")
+                attemptToReadArticles()
+            }, 2000)
         }, 2000)
     }
 
-    private fun searchForNews() {
-        Logger.d("Searching for news...")
-
-        val root = service.rootInActiveWindow ?: return
-        val searchBox = findSearchBox(root)
-
-        if (searchBox != null) {
-            performNewsSearch(searchBox)
-        } else {
-            // If no search box, use simplified approach
-            simplifiedReading()
-        }
-    }
-
-    private fun findSearchBox(root: AccessibilityNodeInfo): AccessibilityNodeInfo? {
-        return NodeFinder.findByText(root, "Search") ?:
-        NodeFinder.findByText(root, "Search the web") ?:
-        NodeFinder.findFirstEditText(root)
-    }
-
-    private fun performNewsSearch(searchBox: AccessibilityNodeInfo) {
-        // Click search box
-        if (searchBox.isClickable) {
-            searchBox.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-        }
-
-        // Wait, then enter search term
-        handler.postDelayed({
-            val root = service.rootInActiveWindow ?: return@postDelayed
-            val editText = NodeFinder.findFirstEditText(root) ?: return@postDelayed
-
-            // Use a simple search term
-            val searchTerm = ARTICLE_SEARCH_TERMS.random()
-            Logger.d("Searching for: $searchTerm")
-
-            val args = Bundle()
-            args.putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, searchTerm)
-            editText.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)
-
-            // Submit search
-            handler.postDelayed({
-                editText.performAction(EditorInfo.IME_ACTION_SEARCH)
-
-                // Wait for results, then try to read
-                handler.postDelayed({
-                    attemptToReadArticles()
-                }, 3000)
-            }, 1000)
-        }, 1000)
-    }
-
-    private fun simplifiedReading() {
-        Logger.d("Using simplified reading approach")
-
-        // Just simulate reading without UI interaction
-        handler.postDelayed({
-            articlesRead++
-            Logger.d("Simulated reading article $articlesRead/$ARTICLES_TO_READ")
-
-            if (articlesRead < ARTICLES_TO_READ) {
-                handler.postDelayed({
-                    articlesRead++
-                    Logger.d("Simulated reading article $articlesRead/$ARTICLES_TO_READ")
-
-                    if (articlesRead < ARTICLES_TO_READ) {
-                        handler.postDelayed({
-                            articlesRead++
-                            Logger.d("Simulated reading article $articlesRead/$ARTICLES_TO_READ")
-                            completeReadingSession()
-                        }, 5000)
-                    } else {
-                        completeReadingSession()
-                    }
-                }, 5000)
-            } else {
-                completeReadingSession()
-            }
-        }, 5000)
-    }
-
     private fun completeReadingSession() {
-        Logger.d("Reading session completed successfully")
+        Log.d(TAG, "Reading session completed successfully")
+        Log.d(TAG, "Total articles read: $articlesRead")
+
         isReading = false
         currentOnComplete?.invoke()
         currentOnComplete = null
         articlesRead = 0
+
+        // Ensure we're back on home page
+        handler.postDelayed({
+            service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
+        }, 1000)
     }
 
     fun cleanup() {
+        Log.d(TAG, "Cleaning up ReadExecutor")
         handler.removeCallbacksAndMessages(null)
         isReading = false
         currentOnComplete = null
+        articlesRead = 0
     }
 }

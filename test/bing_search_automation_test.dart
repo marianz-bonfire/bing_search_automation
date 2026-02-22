@@ -65,6 +65,12 @@ class MockBingSearchAutomationPlatform
     // TODO: implement listen
     
   }
+
+  @override
+  Future<void> stop() {
+    // TODO: implement stop
+    throw UnimplementedError();
+  }
 }
 
 void main() {

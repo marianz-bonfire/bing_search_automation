@@ -1,7 +1,6 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-final FlutterLocalNotificationsPlugin notifications =
-FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin notifications = FlutterLocalNotificationsPlugin();
 
 Future<void> initNotifications() async {
   const android = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -16,9 +15,10 @@ Future<void> showProgressNotification(int current, int total) async {
     'search_progress_channel',
     'Search Progress',
     channelDescription: 'Notifications for search automation progress',
+    icon: '@mipmap/ic_launcher',
     importance: Importance.low, // progress notifications are usually low priority
     priority: Priority.low,
-    onlyAlertOnce: true, // 🔹 prevents sound/vibration every update
+    //onlyAlertOnce: true,
     showProgress: true,
     maxProgress: total,
     progress: current,
@@ -36,21 +36,16 @@ Future<void> showProgressNotification(int current, int total) async {
 }
 
 Future<void> showCompletedNotification() async {
-
-  // 🔹 Final "complete" notification
+  // Final "complete" notification
   const androidDetails = AndroidNotificationDetails(
     'search_complete_channel',
     'Search Complete',
     channelDescription: 'Completion notification for search automation',
     importance: Importance.high,
     priority: Priority.high,
+    icon: '@mipmap/ic_launcher',
   );
   const details = NotificationDetails(android: androidDetails);
 
-  await notifications.show(
-    1,
-    'Search Completed 🎉',
-    'All searches finished successfully!',
-    details,
-  );
+  await notifications.show(1, 'Search Completed 🎉', 'All searches finished successfully!', details);
 }

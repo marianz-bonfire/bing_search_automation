@@ -67,7 +67,7 @@ class BingSearchAutomationPlugin: FlutterPlugin, MethodCallHandler {
             "checkServiceEnabled" -> result.success(isServiceEnabled(context))
             "getCurrentQuery" -> result.success(SearchAccessibilityService.getCurrentQuery())
             "launchBing" -> handleLaunchBing(result)
-            "stopSearch" -> handleStopSearch(result)
+            "stop" -> handleStop(result)
             "setQueryType" -> handleSetQueryType(call, result)
             "enableLog" -> handleEnableLog(call, result)
             else -> result.notImplemented()
@@ -134,15 +134,18 @@ class BingSearchAutomationPlugin: FlutterPlugin, MethodCallHandler {
         result.success(null)
     }
 
-    private fun handleStopSearch(result: MethodResult) {
-        // Option 1: Directly access companion object properties
-        /*
-        SearchAccessibilityService.searchQueue.clear()
-        SearchAccessibilityService.setLaunchedFromApp(false)
-        SearchAccessibilityService.getInstance()?.apply {
-            isSearching = false
-        }*/
+    private fun handleStop(result: MethodResult) {
+        handleStopSearch(result);
+        handleStopRead(result);
+    }
 
+    private fun handleStopSearch(result: MethodResult) {
+        SearchAccessibilityService.getInstance()?.stopSearch()
+        result.success(true)
+    }
+
+    private fun handleStopRead(result: MethodResult) {
+        SearchAccessibilityService.getInstance()?.stopRead()
         result.success(true)
     }
 

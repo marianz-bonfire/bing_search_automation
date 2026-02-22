@@ -67,4 +67,9 @@ abstract class BingSearchAutomationPlatform extends PlatformInterface {
   Future<void> launchBing() {
     throw UnimplementedError('launchBing() has not been implemented.');
   }
+
+  Future<void> stop() {
+    throw UnimplementedError('stop() has not been implemented.');
+  }
+
 }

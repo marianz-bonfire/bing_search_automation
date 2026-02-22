@@ -79,6 +79,11 @@ class MethodChannelBingSearchAutomation extends BingSearchAutomationPlatform {
   }
 
   @override
+  Future<void> stop() async {
+    await methodChannel.invokeMethod('stop');
+  }
+
+  @override
   Future<void> openAccessibilitySettings() async {
     const intent = AndroidIntent(action: 'android.settings.ACCESSIBILITY_SETTINGS');
     await intent.launch();

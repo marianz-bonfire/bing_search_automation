@@ -306,7 +306,7 @@ class SearchAccessibilityService : AccessibilityService() {
         Logger.d("handleRead: Scheduling performRead in 5000ms")
         handler.postDelayed({
             Logger.d("handleRead: Executing performRead")
-            readExecutor.performRead("latest news") {
+            readExecutor.performRead {
                 Logger.d("handleRead: Read session completed")
 
                 // Read session completed
@@ -340,6 +340,26 @@ class SearchAccessibilityService : AccessibilityService() {
         BingSearchAutomationPlugin.sendCompleted()
     }
 
+
+    fun shouldPerformSearch(): Boolean {
+        val now = System.currentTimeMillis()
+        // Add check for first search
+        val timeSinceLastSearch = now - lastSearchTime
+
+        // If this is the first search (lastSearchTime was just initialized),
+        // we should allow it regardless of the time difference
+        val shouldPerform = !isSearching && (timeSinceLastSearch >= 3000 || timeSinceLastSearch < 0)
+
+        Logger.d("shouldPerformSearch: $shouldPerform (isSearching: $isSearching, time since last: ${timeSinceLastSearch}ms)")
+        return shouldPerform
+    }
+
+    fun updateLastSearchTime() {
+        lastSearchTime = System.currentTimeMillis()
+        Logger.d("updateLastSearchTime: Updated to $lastSearchTime")
+    }
+
+
     override fun onInterrupt() {
         Logger.d("onInterrupt: Service interrupted")
         cleanup()
@@ -363,21 +383,47 @@ class SearchAccessibilityService : AccessibilityService() {
         Logger.d("cleanup: Cleanup completed")
     }
 
-    fun shouldPerformSearch(): Boolean {
-        val now = System.currentTimeMillis()
-        // Add check for first search
-        val timeSinceLastSearch = now - lastSearchTime
+    // Add these methods inside SearchAccessibilityService class
+    fun stopSearch() {
+        Logger.d("stopSearch: Stopping search session")
 
-        // If this is the first search (lastSearchTime was just initialized),
-        // we should allow it regardless of the time difference
-        val shouldPerform = !isSearching && (timeSinceLastSearch >= 3000 || timeSinceLastSearch < 0)
+        // Clear the search queue
+        searchQueue.clear()
 
-        Logger.d("shouldPerformSearch: $shouldPerform (isSearching: $isSearching, time since last: ${timeSinceLastSearch}ms)")
-        return shouldPerform
+        // Reset search state
+        setLaunchedFromApp(false)
+        isSearching = false
+        Companion.shouldProcessEvents = false
+
+        // Remove any pending callbacks
+        handler.removeCallbacksAndMessages(null)
+
+        // Go back to home if in Bing
+        performGlobalAction(GLOBAL_ACTION_BACK)
+
+        Logger.d("stopSearch: Search stopped successfully")
     }
 
-    fun updateLastSearchTime() {
-        lastSearchTime = System.currentTimeMillis()
-        Logger.d("updateLastSearchTime: Updated to $lastSearchTime")
+    fun stopRead() {
+        Logger.d("stopRead: Stopping read session")
+
+        // Reset read session state
+        readSessionActive = false
+        readSessionCompleted = false
+        Companion.shouldProcessEvents = false
+
+        // Clean up ReadExecutor
+        readExecutor.cleanup()
+
+        // Remove any pending callbacks
+        handler.removeCallbacksAndMessages(null)
+
+        // Go back to home
+        performGlobalAction(GLOBAL_ACTION_BACK)
+
+        // Reset launched from app flag
+        setLaunchedFromApp(false)
+
+        Logger.d("stopRead: Read stopped successfully")
     }
 }
