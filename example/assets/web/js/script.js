@@ -30,6 +30,22 @@
             }
             catch (e) { }
         },
+        setDailyExpire: (name, value) => {
+            try {
+                let d = new Date();
+                d.setHours(23, 59, 59, 0);
+                
+                // If it's already past 11:59:59 PM, set to tomorrow
+                if (d <= new Date()) {
+                    d.setDate(d.getDate() + 1);
+                }
+
+                let cookie = `${name}=${value};expires=${d.toUTCString()};path=/`;
+
+                document.cookie = cookie;
+            }
+            catch (e) { }
+        },
         get: (name) => {
             let value = null;
 
@@ -286,7 +302,8 @@
         },
         stop: () => {
 
-            BING_AUTOSEARCH.cookies.set("_stopped", 'true', 365);
+            //BING_AUTOSEARCH.cookies.set("_stopped", 'true', 365);
+            BING_AUTOSEARCH.cookies.setDailyExpire("_stopped", 'true');
 
             setTimeout(() => {
                 window.open("https://rewards.bing.com/pointsbreakdown");
@@ -347,7 +364,8 @@
         }
 
         if (stop === "true") {
-            BING_AUTOSEARCH.cookies.set("_stopped", 'true', 365);
+            //BING_AUTOSEARCH.cookies.set("_stopped", 'true', 365);
+            BING_AUTOSEARCH.cookies.setDailyExpire("_stopped", 'true');
             BING_AUTOSEARCH.search.stop();
             location.reload();
         } else {

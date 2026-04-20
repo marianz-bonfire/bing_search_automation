@@ -2,17 +2,17 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Bing Search"
-#define MyAppVersion "1.0.17+19"
-#define MyAppPublisher "Bonfire" 
+#define MyAppVersion "1.0.18+1"
+#define MyAppPublisher "Tarsier" 
 #define MyAppExeName "bing_search_automation_example.exe"
 #define MyAppServiceName "Rewards.exe"
 #define MyAppAssocName MyAppName + " File"  
 #define MyAppAssocExt ".rew"
 #define MyAppAssocKey StringChange(MyAppAssocName, " ", "") + MyAppAssocExt   
-#define MyAppRootDir "C:\\Users\\Bonfire\\Projects\\Flutter\\bing_search_automation\\example"
+#define MyAppRootDir "C:\\Users\\Tarsier\\Projects\\Flutter\\bing_search_automation\\example"
 #define MyAppReleaseDir "build\windows\x64\runner\Release"
 #define Timestamp GetDateTimeString('yyyymmdd.hhnnss', '-', ':')
-#define MyPassword 'bonfire'
+#define MyPassword 'tarsier'
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
@@ -99,8 +99,8 @@ var
   CleanupChecked: Boolean;
   InstallServiceCheckbox: TNewCheckBox;
 const
-  UninstSiteURL = 'https://mycdis.com/sirius-pos';
-  UninstPassword = 'bonfire';
+  UninstSiteURL = 'https://tarsier-marianz.blogspot.com/';
+  UninstPassword = 'tarsier';
 
 // This will displayed during installation
 procedure InitializeWizard;
@@ -204,12 +204,12 @@ begin
   end;
 
   // Check if the app is running
-  if ShellExec('', 'tasklist', '/FI "IMAGENAME eq kiosk.exe"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0) then
+  if ShellExec('', 'tasklist', '/FI "IMAGENAME eq bing_search_automation_example.exe"', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0) then
   begin
-    Response := MsgBox('Kiosk appears to be running. Do you want to close it before uninstalling?', mbConfirmation, MB_YESNO);
+    Response := MsgBox('Tarsier appears to be running. Do you want to close it before uninstalling?', mbConfirmation, MB_YESNO);
     if Response = IDYES then
     begin
-      Exec('taskkill', '/F /IM kiosk.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+      Exec('taskkill', '/F /IM bing_search_automation_example.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
     end
     else
     begin
@@ -279,7 +279,7 @@ begin
     FeedbackCheckbox.Top := ctrl.Top + ScaleY(50);
     FeedbackCheckbox.Left := ctrl.Left;
     FeedbackCheckbox.Width := ScaleX(300);
-    FeedbackCheckbox.Caption := 'Delete .Kiosk folder from Documents';
+    FeedbackCheckbox.Caption := 'Delete .Tarsier folder from Documents';
     FeedbackCheckbox.Checked := True;
  
     OriginalPageNameLabel := UninstallProgressForm.PageNameLabel.Caption;
@@ -287,8 +287,8 @@ begin
     OriginalCancelButtonEnabled := UninstallProgressForm.CancelButton.Enabled;
     OriginalCancelButtonModalResult := UninstallProgressForm.CancelButton.ModalResult;
               
-    UninstallProgressForm.PageNameLabel.Caption := 'Cleanup Sirius Kiosk';
-    UninstallProgressForm.PageDescriptionLabel.Caption := 'Sirius Kiosk will be uninstalled from your computer. You may also choose to remove all associated data, logs, and settings.';
+    UninstallProgressForm.PageNameLabel.Caption := 'Cleanup Tarsier';
+    UninstallProgressForm.PageDescriptionLabel.Caption := 'Tarsier will be uninstalled from your computer. You may also choose to remove all associated data, logs, and settings.';
     UninstallProgressForm.CancelButton.Enabled := True;
     UninstallProgressForm.CancelButton.ModalResult := mrCancel;
  
@@ -330,15 +330,9 @@ begin
     // Delete all logs
     DelTree(ExpandConstant('{app}\data\.logs'), True, True, True);   
     
-    if CleanupChecked then
-    begin
-      // Delete folder in app data
-      //DelTree(ExpandConstant('{userappdata}\Bonfire Technologies & Solutions Corp'), True, True, True);
-    end;
-
     if DeleteDocChecked then
     begin
-      DelTree(ExpandConstant('{userdocs}\.Kiosk'), True, True, True);
+      DelTree(ExpandConstant('{userdocs}\.Tarsier'), True, True, True);
     end;
   end;
   if CurUninstallStep = usDone then
